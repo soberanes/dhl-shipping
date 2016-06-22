@@ -25,6 +25,6 @@ $table = $installer->getConnection()
     ->addColumn('date', Varien_Db_Ddl_Table::TYPE_DATE, null, array(
         'nullable' => false
     ), 'Date');
-$installer ->getConnection()->cretaeTable($table);
+$installer ->getConnection()->createTable($table);
 
 $installer->endSetup();
