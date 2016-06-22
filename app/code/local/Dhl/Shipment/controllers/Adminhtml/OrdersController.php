@@ -13,6 +13,31 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
 
     public function newAction(){
         // Generate file here
+
+
+        // save file in database
+        $model = Mage::getSingleton('dhl_shipment/orders');
+        $data = array(
+            'file' => 'dhl-so-22-06-16-14-41-56.csv',
+            'date' => Mage::getModel('core/date')->date('d-m-Y H:i:s')
+        );
+        $model->setData($data);
+
+        try{
+            $model->save();
+
+            Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
+            $this->_redirect('*/*/');
+
+            return;
+        }catch(Mage_Core_Exception $e){
+            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+        }catch(Exception $e){
+            Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
+        }
+
+        Mage::getSingleton('adminhtml/session')->setOrdersData($data);
+        $this->_redirectReferer();
     }
 
     public function saveAction()

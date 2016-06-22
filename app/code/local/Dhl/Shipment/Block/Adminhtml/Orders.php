@@ -12,7 +12,8 @@ class Dhl_Shipment_Block_Adminhtml_Orders extends Mage_Adminhtml_Block_Widget_Gr
         $this->_blockGroup = 'dhl_shipment';
         $this->_controller = 'adminhtml_orders';
         $this->_headerText = $this->__('Orders');
-
+        $this->_addButtonLabel = Mage::helper('dhl_shipment')->__('Generate SO File');
         parent::__construct();
     }
+
 }

@@ -5,8 +5,8 @@
         <sales>
             <children>
                 <dhl_shipment_orders translate="title" module="dhl_shipment">
-                    <title>DHL SO Shipment<title>
-                        <action>adminhtml/orders</action>
+                    <title>DHL SO Shipment</title>
+                    <action>adminhtml/orders</action>
                 </dhl_shipment_orders>
             </children>
         </sales>

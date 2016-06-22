@@ -39,7 +39,7 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Grid extends Mage_Adminhtml_Block_Widg
         ));
 
         $this->addColumn('file', array(
-            'header' => $this->__('File'),
+            'header' => $this->__('SO File'),
             'index'  => 'file'
         ));
 
