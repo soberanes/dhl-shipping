@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Dhl_Shipment>
+            <version>1.0.0</version>
+        </Dhl_Shipment>
+    </modules>
+
+    <global>
+        <!-- Helpers -->
+        <helpers>
+            <dhl_shipment>
+                <class>Dhl_Shipment_Helper</class>
+            </dhl_shipment>
+        </helpers>
+        <!-- blocks -->
+        <blocks>
+            <dhl_shipment>
+                <class>Dhl_Shipment_Block</class>
+            </dhl_shipment>
+        </blocks>
+        <!-- Models -->
+        <models>
+            <!-- DB resource -->
+            <dhl_shipment>
+                <class>Dhl_Shipment_Model</class>
+                <resourceModel>dhl_shipment_mysql4</resourceModel>
+            </dhl_shipment>
+            <!-- DB resource tables -->
+            <dhl_shipment_mysql4>
+                <class>Dhl_Shipment_Model_Mysql4</class>
+                <entities>
+                    <orders>
+                        <table>dhl_shipment_orders</table>
+                    </orders>
+                </entities>
+            </dhl_shipment_mysql4>
+        </models>
+        <!-- Install resource -->
+        <resources>
+            <dhl_shipment_setup>
+                <setup>
+                    <module>Dhl_Shipment</module>
+                </setup>
+            </dhl_shipment_setup>
+        </resources>
+    </global>
+
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <Dhl_Shipment before="Mage_Admingtml">Dhl_Shipment_Adminhtml</Dhl_Shipment>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+
+    <adminhtml>
+        <layout>
+            <updates>
+                <dhl_shipment>
+                    <file>dhl/shipment.xml</file>
+                </dhl_shipment>
+            </updates>
+        </layout>
+    </adminhtml>
+
+</config>

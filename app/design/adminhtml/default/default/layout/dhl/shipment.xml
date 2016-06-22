@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<layout>
+    <adminhtml_orders_index>
+        <reference name="content">
+            <!-- Define the block by namespace_modulename/adminhtml_controllername -->
+            <block type="dhl_shipment/adminhtml_orders" name="dhl_shipment_orders" />
+        </reference>
+    </adminhtml_orders_index>
+</layout>

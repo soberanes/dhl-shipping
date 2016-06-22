@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<config>
+    <!-- Menu in admin panel -->
+    <menu>
+        <sales>
+            <children>
+                <dhl_shipment_orders translate="title" module="dhl_shipment">
+                    <title>DHL SO Shipment<title>
+                        <action>adminhtml/orders</action>
+                </dhl_shipment_orders>
+            </children>
+        </sales>
+    </menu>
+    <!-- Permissions -->
+    <acl>
+        <resources>
+            <admin>
+                <children>
+                    <sales>
+                        <children>
+                            <dhl_shipment_orders>
+                                <title>Orders</title>
+                            </dhl_shipment_orders>
+                        </children>
+                    </sales>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>
