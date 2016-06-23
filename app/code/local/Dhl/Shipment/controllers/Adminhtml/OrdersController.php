@@ -27,8 +27,9 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
     public function downloadAction(){
         $this->_initAction();
 
-        $id = $this->getRequest()->getParam('id');
-        $model = Mage::getModel('dhl_shipment/orders');
+        $id     = $this->getRequest()->getParam('id');
+        $model  = Mage::getModel('dhl_shipment/orders');
+        $helper = Mage::helper('dhl_shipment/data');
 
         if($id){
             $model->load($id);
@@ -40,12 +41,75 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
                 return;
             }
 
-            $orders = Mage::getModel('sales/orders')->getCollection()
-                            ->addFieldToFilter('status', 'shipping');
+            $entries = array();
+            $lightcone_entries = array();
+            $headers = $helper->getFileHeaders();
+            array_push($entries, $headers);
+
+            $orders = $helper->getOrders();
+            $white_list = $helper->getWhiteList();
+
+            foreach ($orders as $order) {
+                $dhl  = 0;
+                $lgc  = 0;
+                $line = 0;
+
+                $order_row = $helper->getFileRow($order);
+                $lightcone_order_row = $order_row;
+
+                foreach ($order->getItemsCollection() as $key => $item) {
+
+                    $product = $item->getData();
+
+                    if(in_array($product['sku'], $white_list)){
+                        array_push($lightcone_order_row, $key+1); //LineNo from 1
+                        array_push($lightcone_order_row, $product['sku']); //ItemD
+                        array_push($lightcone_order_row, intval($product['qty_ordered'])); //Quantity
+                        array_push($lightcone_order_row, ''); //Gift Message
+                        array_push($lightcone_order_row, 0); //Unit Price
+                        $lgc = 2;
+                    }else{
+                        $line++;
+                        array_push($order_row, $line); //LineNo from 1
+                        array_push($order_row, $product['sku']); //ItemD
+                        array_push($order_row, intval($product['qty_ordered'])); //Quantity
+                        array_push($order_row, ''); //Gift Message
+                        array_push($order_row, 0); //Unit Price
+                        $dhl = 1;
+                    }
+                }
+
+                if($dhl == 1){
+                    array_push($entries, $order_row);
+                    //cambiar el status del pedido
+                    $helper->changeOrderStatus($order);
+                }
+
+                //crear archivo csv aquí
+                
+                die;
+
+                // echo "<pre>";
+                // var_dump($order_row);
+                // die;
+            }
 
             echo "<pre>";
-            var_dump($orders);
+            var_dump(1);
             die;
+
+
+            // $order_collection = Mage::getModel('sales/order')
+            //                         ->getCollection()
+            //                         ->addAttributeToSelect('*')
+            //                         ->addAttributeToFilter('status', 'shipping');
+            //
+            // foreach ($order_collection as $order) {
+            //     $email = $order->getCustomerEmail();
+            //     echo $order->getId() . ": '" . $order->getStatus() . "', " . $email . "\n";
+            // }
+            // var_dump($order_collection);
+
 
             return;
         }
