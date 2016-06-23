@@ -22,6 +22,9 @@ $table = $installer->getConnection()
     ->addColumn('file', Varien_Db_Ddl_Table::TYPE_VARCHAR, null, array(
         'nullable' => false
     ), 'File')
+    ->addColumn('qty', Varien_Db_Ddl_Table::TYPE_INTEGER, null, array(
+        'nullable' => false
+    ), 'Qty')
     ->addColumn('date', Varien_Db_Ddl_Table::TYPE_DATE, null, array(
         'nullable' => false
     ), 'Date');

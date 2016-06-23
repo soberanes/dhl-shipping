@@ -14,35 +14,120 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
     public function newAction(){
         // Generate file here
 
+        $this->_forward('edit');
 
-        // save file in database
-        $model = Mage::getSingleton('dhl_shipment/orders');
-        $data = array(
-            'file' => 'dhl-so-22-06-16-14-41-56.csv',
-            'date' => Mage::getModel('core/date')->date('d-m-Y H:i:s')
-        );
-        $model->setData($data);
+        // $params = array(
+        //     'file' => 'dhl-so-22-06-16-14-41-56.csv',
+        //     'date' => Mage::getModel('core/date')->date('d-m-Y H:i:s')
+        // );
+        // $this->_forward('save', null, null, $params);
 
-        try{
-            $model->save();
-
-            Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
-            $this->_redirect('*/*/');
-
-            return;
-        }catch(Mage_Core_Exception $e){
-            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
-        }catch(Exception $e){
-            Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
-        }
-
-        Mage::getSingleton('adminhtml/session')->setOrdersData($data);
-        $this->_redirectReferer();
     }
 
-    public function saveAction()
-    {
-        // Save data in row
+    public function downloadAction(){
+        $this->_initAction();
+
+        $id = $this->getRequest()->getParam('id');
+        $model = Mage::getModel('dhl_shipment/orders');
+
+        if($id){
+            $model->load($id);
+
+            if(!$model->getId()){
+                Mage::getSingleton('adminhtml/session')->addError($this->__('Esta SO no existe.'));
+                $this->_redirect('*/*/');
+
+                return;
+            }
+
+            $orders = Mage::getModel('sales/orders')->getCollection()
+                            ->addFieldToFilter('status', 'shipping');
+
+            echo "<pre>";
+            var_dump($orders);
+            die;
+
+            return;
+        }
+    }
+
+    public function editAction(){
+        $this->_initAction();
+
+        // Get id if available
+        $id = $this->getRequest()->getParam('id');
+        $model = Mage::getModel('dhl_shipment/orders');
+
+        if($id){
+            // Load record
+            $model->load($id);
+
+            // Check if record is loaded
+            if(!$model->getId()){
+                Mage::getSingleton('adminhtml/session')->addError($this->__('Esta SO no existe.'));
+                $this->_redirect('*/*/');
+
+                return;
+            }
+        }
+
+        $this->_title($model->getId() ? $model->getFile() : $this->__('Nueva SO'));
+
+        $data = Mage::getSingleton('adminhtml/session')->getOrdersData(true);
+        if(!empty($data)){
+            $model->setData($data);
+        }
+
+        Mage::register('dhl_shipment', $model);
+
+        $this->_initAction()
+            ->_addBreadcrumb($id ? $this->__('Editar SO') : $this->__('Nueva SO'), $id ? $this->__('Editar SO') : $this->__('Nueva SO'))
+            ->_addContent($this->getLayout()->createBlock('dhl_shipment/adminhtml_orders_edit')->setData('action', $this->getUrl('*/*/save')))
+            ->renderLayout();
+    }
+
+    public function deleteAction(){
+        $id = $this->getRequest()->getParam('id');
+        $model = Mage::getModel('dhl_shipment/orders');
+
+        if($id){
+            try{
+                $model->setId($id)->delete();
+                Mage::getSingleton('adminhtml/session')->addError($this->__('La SO ha sido eliminada.'));
+                $this->_redirect('*/*/');
+
+                return;
+            }catch(Exception $e){
+
+            }
+
+        }
+    }
+
+    public function saveAction(){
+
+        if($postData = $this->getRequest()->getPost()){
+            // Save data in database
+            $model = Mage::getSingleton('dhl_shipment/orders');
+
+            $model->setData($postData);
+
+            try{
+                $model->save();
+
+                Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
+                $this->_redirect('*/*/');
+
+                return;
+            }catch(Mage_Core_Exception $e){
+                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            }catch(Exception $e){
+                Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
+            }
+
+            Mage::getSingleton('adminhtml/session')->setOrdersData($postData);
+            $this->_redirectReferer();
+        }
     }
 
     public function messageAction(){

@@ -31,6 +31,7 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Grid extends Mage_Adminhtml_Block_Widg
 
     protected function _prepareColumns(){
         // Add the columns that should appear in the grid
+
         $this->addColumn('id', array(
             'header' => $this->__('ID'),
             'align'  => 'right',
@@ -43,11 +44,22 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Grid extends Mage_Adminhtml_Block_Widg
             'index'  => 'file'
         ));
 
+        $this->addColumn('qty', array(
+            'header' => $this->__('Qty'),
+            'index'  => 'qty'
+        ));
+
         $this->addColumn('date', array(
             'header' => $this->__('Date'),
             'index'  => 'date'
         ));
 
         return parent::_prepareColumns();
+    }
+
+    public function getRowUrl($row)
+    {
+        // This is where our row data will link to
+        return $this->getUrl('*/*/download', array('id' => $row->getId()));
     }
 }
