@@ -14,7 +14,7 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
     public function newAction(){
         // Generate file here
 
-        $this->_forward('edit');
+        $this->_forward('download');
 
         // $params = array(
         //     'file' => 'dhl-so-22-06-16-14-41-56.csv',
@@ -84,33 +84,15 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
                     //cambiar el status del pedido
                     $helper->changeOrderStatus($order);
                 }
-
-                //crear archivo csv aquí
-                
-                die;
-
-                // echo "<pre>";
-                // var_dump($order_row);
-                // die;
             }
 
-            echo "<pre>";
-            var_dump(1);
-            die;
+            //crear archivo csv aquí - $entries
+            $filename = 'dhl-SO-' . Mage::getModel('core/date')->date('m-d-Y-H-i-s') . '.csv';
+            $content = Mage::helper('dhl_shipment/sales')->generateSalesOrderList();
 
+            $this->_prepareDownloadResponse($filename, $content);
 
-            // $order_collection = Mage::getModel('sales/order')
-            //                         ->getCollection()
-            //                         ->addAttributeToSelect('*')
-            //                         ->addAttributeToFilter('status', 'shipping');
-            //
-            // foreach ($order_collection as $order) {
-            //     $email = $order->getCustomerEmail();
-            //     echo $order->getId() . ": '" . $order->getStatus() . "', " . $email . "\n";
-            // }
-            // var_dump($order_collection);
-
-
+            $this->_redirect('*/*/');
             return;
         }
     }
