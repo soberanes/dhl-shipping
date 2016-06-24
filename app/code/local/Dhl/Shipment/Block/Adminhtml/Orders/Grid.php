@@ -60,6 +60,6 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Grid extends Mage_Adminhtml_Block_Widg
     public function getRowUrl($row)
     {
         // This is where our row data will link to
-        return $this->getUrl('*/*/edit', array('id' => $row->getId()));
+        return $this->getUrl('*/*/download', array('id' => $row->getId()));
     }
 }

@@ -51,7 +51,6 @@ class Dhl_Shipment_Helper_Data extends Mage_Core_Helper_Abstract
             '5116707',
             'SO',
             $order->getRealOrderId(),
-            $order->getCreatedAtFormated('short'),
             date('m/d/Y', Mage::getModel('core/date')->timestamp($order->getCreatedAt())),
             'B',
             $billingAddress[0],

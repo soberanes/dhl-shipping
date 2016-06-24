@@ -37,11 +37,14 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Edit_Form extends Mage_Adminhtml_Block
             ));
         }
 
+        $afterElementHtml = '<p class="nm"><small>' . ' Nombre del archivo a generar. En blanco para generar nombre por default.' . '</small></p>';
+
         $fieldset->addField('file', 'text', array(
             'name'      => 'file',
             'label'     => Mage::helper('checkout')->__('File'),
             'title'     => Mage::helper('checkout')->__('File'),
-            'required'  => true,
+            'required'  => false,
+            'after_element_html' => $afterElementHtml,
         ));
 
         $form->setValues($model->getData());

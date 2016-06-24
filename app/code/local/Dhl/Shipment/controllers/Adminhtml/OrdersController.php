@@ -7,33 +7,97 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
 
     public function indexAction(){
         // Let's call our initAction method which will set some basic params for each action
+
         $this->_initAction()
             ->renderLayout();
     }
 
     public function newAction(){
-        // Generate file here
-
-        $this->_forward('download');
-
-        // $params = array(
-        //     'file' => 'dhl-so-22-06-16-14-41-56.csv',
-        //     'date' => Mage::getModel('core/date')->date('d-m-Y H:i:s')
-        // );
-        // $this->_forward('save', null, null, $params);
-
-    }
-
-    public function downloadAction(){
-        $this->_initAction();
-
-        $id     = $this->getRequest()->getParam('id');
         $model  = Mage::getModel('dhl_shipment/orders');
         $helper = Mage::helper('dhl_shipment/data');
 
+        $entries = array();
+        $lightcone_entries = array();
+        $headers = $helper->getFileHeaders();
+        array_push($entries, $headers);
+
+        $orders = $helper->getOrders();
+        $white_list = $helper->getWhiteList();
+
+        foreach ($orders as $order) {
+            $dhl    = 0;
+            $lgc    = 0;
+            $line   = 0;
+            $so_qty = 0;
+
+            $order_row = $helper->getFileRow($order);
+            $lightcone_order_row = $order_row;
+
+            foreach ($order->getItemsCollection() as $key => $item) {
+
+                $product = $item->getData();
+
+                if(in_array($product['sku'], $white_list)){
+                    array_push($lightcone_order_row, $key+1); //LineNo from 1
+                    array_push($lightcone_order_row, $product['sku']); //ItemD
+                    array_push($lightcone_order_row, intval($product['qty_ordered'])); //Quantity
+                    array_push($lightcone_order_row, ''); //Gift Message
+                    array_push($lightcone_order_row, 0); //Unit Price
+                    $lgc = 2;
+                }else{
+                    $line++;
+                    array_push($order_row, $line); //LineNo from 1
+                    array_push($order_row, $product['sku']); //ItemD
+                    array_push($order_row, intval($product['qty_ordered'])); //Quantity
+                    array_push($order_row, ''); //Gift Message
+                    array_push($order_row, 0); //Unit Price
+                    $dhl = 1;
+                }
+            }
+
+            if($dhl == 1){
+                array_push($entries, $order_row);
+                //cambiar el status del pedido
+                $helper->changeOrderStatus($order);
+            }
+        }
+
+        // crear archivo csv aquí - $entries
+        // sacar el nombre por el ID
+        $filename = 'dhl-SO-' . Mage::getModel('core/date')->date('m-d-Y-H-i-s') . '.csv';
+        $model = Mage::getSingleton('dhl_shipment/orders');
+
+        $so_data = array(
+            'file' => $filename,
+            'qty'  => count($entries) - 1,
+            'date' => Mage::getModel('core/date')->date('Y-m-d H:i:s'),
+        );
+        $model->setData($so_data);
+
+        try{
+            $model->save();
+        }catch(Mage_Core_Exception $e){
+            Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+        }catch(Exception $e){
+            Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
+        }
+
+        $content = Mage::helper('dhl_shipment/sales')->generateSalesOrderList($entries, $filename);
+
+        // $this->wonprepareDownloadResponse($filename, $content);
+        // $this->_prepareDownloadResponse($filename, $content);
+
+        Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo CSV se ha generado con éxito.'));
+        $this->_redirect('*/*/');
+        return;
+    }
+
+    public function downloadAction(){
+        $id = $this->getRequest()->getParam('id');
+        $model = Mage::getModel('dhl_shipment/orders');
+
         if($id){
             $model->load($id);
-
             if(!$model->getId()){
                 Mage::getSingleton('adminhtml/session')->addError($this->__('Esta SO no existe.'));
                 $this->_redirect('*/*/');
@@ -41,60 +105,20 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
                 return;
             }
 
-            $entries = array();
-            $lightcone_entries = array();
-            $headers = $helper->getFileHeaders();
-            array_push($entries, $headers);
+            $filename = $model->getFile();
+            $file = Mage::getBaseDir('var') . DS . 'export' . DS . $filename;
 
-            $orders = $helper->getOrders();
-            $white_list = $helper->getWhiteList();
-
-            foreach ($orders as $order) {
-                $dhl  = 0;
-                $lgc  = 0;
-                $line = 0;
-
-                $order_row = $helper->getFileRow($order);
-                $lightcone_order_row = $order_row;
-
-                foreach ($order->getItemsCollection() as $key => $item) {
-
-                    $product = $item->getData();
-
-                    if(in_array($product['sku'], $white_list)){
-                        array_push($lightcone_order_row, $key+1); //LineNo from 1
-                        array_push($lightcone_order_row, $product['sku']); //ItemD
-                        array_push($lightcone_order_row, intval($product['qty_ordered'])); //Quantity
-                        array_push($lightcone_order_row, ''); //Gift Message
-                        array_push($lightcone_order_row, 0); //Unit Price
-                        $lgc = 2;
-                    }else{
-                        $line++;
-                        array_push($order_row, $line); //LineNo from 1
-                        array_push($order_row, $product['sku']); //ItemD
-                        array_push($order_row, intval($product['qty_ordered'])); //Quantity
-                        array_push($order_row, ''); //Gift Message
-                        array_push($order_row, 0); //Unit Price
-                        $dhl = 1;
-                    }
-                }
-
-                if($dhl == 1){
-                    array_push($entries, $order_row);
-                    //cambiar el status del pedido
-                    $helper->changeOrderStatus($order);
-                }
+            $fileContent = file_get_contents($file);
+            if($fileContent){
+                $this->getResponse()->setHttpResponseCode(200)
+                    ->setHeader('Content-Type', 'application/csv')
+                    ->setHeader('Content-Disposition', 'attachment; filename="'.$filename.'"', true)
+                    ->setBody($fileContent);
+                return;
             }
 
-            //crear archivo csv aquí - $entries
-            $filename = 'dhl-SO-' . Mage::getModel('core/date')->date('m-d-Y-H-i-s') . '.csv';
-            $content = Mage::helper('dhl_shipment/sales')->generateSalesOrderList();
-
-            $this->_prepareDownloadResponse($filename, $content);
-
-            $this->_redirect('*/*/');
-            return;
         }
+
     }
 
     public function editAction(){
@@ -132,6 +156,39 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
             ->renderLayout();
     }
 
+    public function saveAction(){
+
+        if($postData = $this->getRequest()->getPost()){
+            // Save data in database
+            $model = Mage::getSingleton('dhl_shipment/orders');
+
+            if(empty($postData['file'])){
+                $postData['file'] = 'dhl-SO-' . Mage::getModel('core/date')->date('m-d-Y-H-i-s');
+            }else{
+                $postData['file'] = preg_replace('/\s+/', '', $postData['file']);
+            }
+
+            $model->setData($postData);
+
+            try{
+                $model->save();
+
+                Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
+                $this->_redirect('*/*/');
+
+                return;
+            }catch(Mage_Core_Exception $e){
+                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
+            }catch(Exception $e){
+                Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
+            }
+
+            Mage::getSingleton('adminhtml/session')->setOrdersData($postData);
+            $this->_redirect('*/*/');
+            return;
+        }
+    }
+
     public function deleteAction(){
         $id = $this->getRequest()->getParam('id');
         $model = Mage::getModel('dhl_shipment/orders');
@@ -150,35 +207,62 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
         }
     }
 
-    public function saveAction(){
-
-        if($postData = $this->getRequest()->getPost()){
-            // Save data in database
-            $model = Mage::getSingleton('dhl_shipment/orders');
-
-            $model->setData($postData);
-
-            try{
-                $model->save();
-
-                Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
-                $this->_redirect('*/*/');
-
-                return;
-            }catch(Mage_Core_Exception $e){
-                Mage::getSingleton('adminhtml/session')->addError($e->getMessage());
-            }catch(Exception $e){
-                Mage::getSingleton('adminhtml/session')->addError($this->__('Ha ocurrido un error al guardar el archivo con SO.'));
-            }
-
-            Mage::getSingleton('adminhtml/session')->setOrdersData($postData);
-            $this->_redirectReferer();
-        }
-    }
-
     public function messageAction(){
         $data = Mage::getModel('dhl_shipment/orders')->load($this->getRequest()->getParam('id'));
         echo $data->getContent();
+    }
+
+    private function wonprepareDownloadResponse(
+        $fileName,
+        $content,
+        $contentType = 'application/octet-stream',
+        $contentLength = null)
+    {
+        $session = Mage::getSingleton('admin/session');
+        if ($session->isFirstPageAfterLogin()) {
+            $this->_redirect($session->getUser()->getStartupPageUrl());
+            return $this;
+        }
+        $isFile = false;
+        $file   = null;
+        if (is_array($content)) {
+            if (!isset($content['type']) || !isset($content['value'])) {
+                return $this;
+            }
+            if ($content['type'] == 'filename') {
+                $isFile         = true;
+                $file           = $content['value'];
+                $contentLength  = filesize($file);
+            }
+        }
+        $this->getResponse()
+            ->setHttpResponseCode(200)
+            ->setHeader('Pragma', 'public', true)
+            ->setHeader('Cache-Control', 'must-revalidate, post-check=0, pre-check=0', true)
+            ->setHeader('Content-type', $contentType, true)
+            ->setHeader('Content-Length', is_null($contentLength) ? strlen($content) : $contentLength, true)
+            ->setHeader('Content-Disposition', 'attachment; filename="'.$fileName.'"', true)
+            ->setHeader('Last-Modified', date('r'), true);
+        if (!is_null($content)) {
+            if ($isFile) {
+                $this->getResponse()->clearBody();
+                $this->getResponse()->sendHeaders();
+                $ioAdapter = new Varien_Io_File();
+                $ioAdapter->open(array('path' => $ioAdapter->dirname($file)));
+                $ioAdapter->streamOpen($file, 'r');
+                while ($buffer = $ioAdapter->streamRead()) {
+                    print $buffer;
+                }
+                $ioAdapter->streamClose();
+                if (!empty($content['rm'])) {
+                    $ioAdapter->rm($file);
+                }
+                exit(0);
+            } else {
+                $this->getResponse()->setBody($content);
+            }
+        }
+        return $this;
     }
 
     /**

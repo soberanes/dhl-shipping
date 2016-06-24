@@ -9,19 +9,24 @@ class Dhl_Shipment_Helper_Sales extends Mage_Core_Helper_Abstract
      * Generates CSV file with product's list according to the collection in the Sales Order
      * @return array
      */
-    public function generateSalesOrderList($list){
-
+    public function generateSalesOrderList($list, $filename){
         if(!is_null($list)){
             if(count($list) > 0){
                 $io = new Varien_Io_File();
-                $path = Mage::getBaseDir('var') . DS . 'export' . DS;
-                $name = md5(microtime());
-                $file = $path . DS . $name . '.csv';
+                $path = Mage::getBaseDir('var') . DS . 'export';
+                // $name = md5(microtime());
+                $file = $path . DS . $filename;
 
                 $io->setAllowCreateFolders(true);
+                $io->open(array('path' => $path));
                 $io->streamOpen($file, 'w+');
                 $io->streamLock(true);
-                $io->streamWriteCsv($list);
+
+                foreach ($list as $entry) {
+                    $io->streamWriteCsv($entry);
+                }
+
+                $io->streamUnlock();
                 $io->streamClose();
 
                 return array(
@@ -33,5 +38,7 @@ class Dhl_Shipment_Helper_Sales extends Mage_Core_Helper_Abstract
         }
 
     }
+
+    
 
 }
