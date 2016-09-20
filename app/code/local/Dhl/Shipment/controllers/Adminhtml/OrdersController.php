@@ -22,9 +22,11 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
         array_push($entries, $headers);
 
         $orders = $helper->getOrders();
-        $white_list = $helper->getWhiteList();
 
+        $white_list = $helper->getWhiteList();
+        echo "<pre>";
         foreach ($orders as $order) {
+
             $dhl    = 0;
             $lgc    = 0;
             $line   = 0;
@@ -37,13 +39,13 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
 
                 $product = $item->getData();
 
-                if(in_array($product['sku'], $white_list)){
+                if(!in_array($product['sku'], $white_list)){
                     array_push($lightcone_order_row, $key+1); //LineNo from 1
                     array_push($lightcone_order_row, $product['sku']); //ItemD
                     array_push($lightcone_order_row, intval($product['qty_ordered'])); //Quantity
                     array_push($lightcone_order_row, ''); //Gift Message
                     array_push($lightcone_order_row, 0); //Unit Price
-                    $lgc = 2;
+                    $dhl = 2;
                 }else{
                     $line++;
                     array_push($order_row, $line); //LineNo from 1
@@ -58,9 +60,11 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
             if($dhl == 1){
                 array_push($entries, $order_row);
                 //cambiar el status del pedido
-                $helper->changeOrderStatus($order);
+                // $helper->changeOrderStatus($order);
             }
+
         }
+        die;
 
         // crear archivo csv aquí - $entries
         // sacar el nombre por el ID
@@ -174,7 +178,7 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
                 $model->save();
 
                 Mage::getSingleton('adminhtml/session')->addSuccess($this->__('El archivo ha sido generado con éxito.'));
-                $this->_redirect('*/*/');
+                $this->_redirect('*/*/config');
 
                 return;
             }catch(Mage_Core_Exception $e){

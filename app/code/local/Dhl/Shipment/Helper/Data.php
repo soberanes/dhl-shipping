@@ -115,11 +115,13 @@ class Dhl_Shipment_Helper_Data extends Mage_Core_Helper_Abstract
             'DJI-P4-0013','DJI-P4-0014','DJI-P4-0015','DJI-P4-0016','DJI-P4-0017',
             'DJI-P4-0018','DJI-P4-0019','DJI-PXX-0010','DJI-PXX-0011','DJI-RON-0001',
             'DJI-RON-0010','DJI-RON-0011','DJI-ZEN-0011','HUB-107C-0001','HUB-107C-0002',
-            'HUB-107C-0003','HUB-107C-0004','HUB-107D-0001','HUB-107L-0001','HUB-H111-0001'
+            'HUB-107C-0003','HUB-107C-0004','HUB-107D-0001','HUB-107L-0001','HUB-H111-0001',
+            'HEL-X2W-0001'
         );
 
         return $white_list;
     }
+    
     /**
      * Getting file headers to csv
      *
