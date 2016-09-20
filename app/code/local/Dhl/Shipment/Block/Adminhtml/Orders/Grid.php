@@ -12,7 +12,7 @@ class Dhl_Shipment_Block_Adminhtml_Orders_Grid extends Mage_Adminhtml_Block_Widg
         // Set some defaults for our grid
         $this->setDefaultSort('id');
         $this->setId('dhl_shipment_orders_grid');
-        $this->setDefaultDir('asc');
+        $this->setDefaultDir('desc');
         $this->setSaveParametersInSession(true);
     }
 
