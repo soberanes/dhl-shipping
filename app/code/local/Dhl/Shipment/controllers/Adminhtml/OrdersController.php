@@ -13,10 +13,12 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
     }
 
     public function newAction(){
+
         $model  = Mage::getModel('dhl_shipment/orders');
         $helper = Mage::helper('dhl_shipment/data');
 
         $entries = array();
+        $so_list = array();
         $lightcone_entries = array();
         $headers = $helper->getFileHeaders();
         array_push($entries, $headers);
@@ -24,7 +26,7 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
         $orders = $helper->getOrders();
 
         $white_list = $helper->getWhiteList();
-        echo "<pre>";
+
         foreach ($orders as $order) {
 
             $dhl    = 0;
@@ -58,13 +60,27 @@ class Dhl_Shipment_Adminhtml_OrdersController extends Mage_Adminhtml_Controller_
             }
 
             if($dhl == 1){
-                array_push($entries, $order_row);
+                array_push($so_list, $order_row);
                 //cambiar el status del pedido
                 // $helper->changeOrderStatus($order);
             }
 
         }
-        die;
+
+        //Ciclo para rellenar con comas (,)
+        $so_entry = array();
+        foreach ($so_list as $k => $so) {
+            for ($j=0;$j<count($headers);$j++) {
+
+                if(isset($so[$j])){
+                    $so_entry[$j] = $so[$j];
+                }else{
+                    $so_entry[$j] = '';
+                }
+            }
+            array_push($entries, $so_entry);
+        }
+        //Fin de ciclo para rellenar con comas (,)
 
         // crear archivo csv aquí - $entries
         // sacar el nombre por el ID
